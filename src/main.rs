@@ -188,7 +188,7 @@ fn main() {
 
     //try fft
     let fft_result: [f32; SAMPLE_SIZE as usize] = fft(&sensor_val, &reverse_order, &rotate_w_matrix);
-    //println!("{:?}", fft_result);
+    println!("{:?}", fft_result);
 
     //display
 
