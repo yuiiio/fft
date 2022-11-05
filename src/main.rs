@@ -108,10 +108,16 @@ fn fft(input_vec: &[u32; SAMPLE_SIZE as usize],
 
     let mut input_reverse_order: [complex_t; SAMPLE_SIZE as usize] = [complex_t{ x: 0.0, i: 0.0 }; SAMPLE_SIZE as usize];
 
-    //bit order reverse
-    //and set input data to complex_t x: (and convert to f32 for below calc)
+    //and expect x-axis symmetric so, sub avg num.
+    let mut avg_num: f32 = 0.0;
     for i in 0..SAMPLE_SIZE {
-        input_reverse_order[i as usize].x = input_vec[reverse_order[i as usize] as usize] as f32;
+        avg_num += input_vec[i as usize] as f32;
+    }
+    avg_num = avg_num / (SAMPLE_SIZE as f32);
+
+    //bit order reverse
+    for i in 0..SAMPLE_SIZE {
+        input_reverse_order[i as usize].x = input_vec[reverse_order[i as usize] as usize] as f32 - avg_num;
     }
 
     let mut output_vec: [complex_t; SAMPLE_SIZE as usize] = input_reverse_order;
@@ -120,18 +126,23 @@ fn fft(input_vec: &[u32; SAMPLE_SIZE as usize],
 
         let block_num: u32 = 2u32.pow(i);
         let block_size: u32 = SAMPLE_SIZE / block_num;
+        let block_size_div2: u32 = block_size / 2;
 
         for j in 0..block_num {
             let block_start_point: u32 = j * block_size; // block_size is 2 ~ SAMPLE_SIZE
-            for k in 0..(block_size/2) {
+            for k in 0..block_size_div2 {
                 let point1: u32 = block_start_point + k;
                 let point2: u32 = block_start_point + (k * 2);
-                output_vec[point1 as usize] = middle_vec[point1 as usize].add( rotate_w_matrix[i as usize][point1 as usize].mul(middle_vec[point2 as usize]) );
+
+                let output_point: u32 = point1;
+                output_vec[output_point as usize] = middle_vec[point1 as usize].add( rotate_w_matrix[i as usize][output_point as usize].mul(middle_vec[point2 as usize]) );
             }
-            for k in 0..(block_size/2) {
+            for k in 0..block_size_div2 {
                 let point1: u32 = block_start_point + k;
                 let point2: u32 = block_start_point + (k * 2);
-                output_vec[(point1 + (block_size/2)) as usize] = middle_vec[point1 as usize].add( rotate_w_matrix[i as usize][(point1 + (block_size/2)) as usize].mul(middle_vec[point2 as usize]) );
+
+                let output_point: u32 = point1 + block_size_div2;
+                output_vec[output_point as usize] = middle_vec[point1 as usize].add( rotate_w_matrix[i as usize][output_point as usize].mul(middle_vec[point2 as usize]) );
             }
         }
     }
@@ -152,10 +163,12 @@ fn main() {
     }
 
     //sin wave for test
+    /*
     for i in 0..SAMPLE_SIZE {
         let x: f32 = PI_2_32 * (i as f32 / SAMPLE_SIZE as f32);
         sensor_val[i as usize] = ((ADC_BIT_MAX as f32 * 1.0/2.0) + ((ADC_BIT_MAX as f32 * x.sin()) * 1.0/2.0)) as u32;
     }
+    */
 
     //display
     const NX: u32 = SAMPLE_SIZE;
@@ -194,7 +207,8 @@ fn main() {
 
     let mut plot: [[bool; NY as usize]; NX as usize] =[[false; NY as usize]; NX as usize];
     for x in 0..SAMPLE_SIZE {
-        let y: f32 = NY as f32 - ((fft_result[x as usize] / (ADC_BIT_MAX * SAMPLE_SIZE) as f32) as f32) - 1.0;
+        let y: f32 = NY as f32 - ((fft_result[x as usize].abs() * NY as f32 / (ADC_BIT_MAX * SAMPLE_SIZE) as f32) as f32)  - 1.0;
+        println!("{}", y);
         let y: usize = y as usize;
         plot[x as usize][y as usize] = true;
     }
