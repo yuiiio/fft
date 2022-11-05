@@ -120,19 +120,18 @@ fn fft(input_vec: &[u32; SAMPLE_SIZE as usize],
 
         let block_num: u32 = 2u32.pow(i);
         let block_size: u32 = SAMPLE_SIZE / block_num;
-        let block_size_div2: u32 = block_size / 2;
 
         for j in 0..block_num {
             let block_start_point: u32 = j * block_size; // block_size is 2 ~ SAMPLE_SIZE
-            for k in 0..(block_size) {
-                let diff_point1: u32 = k % block_size_div2;
-                let diff_point2: u32 = diff_point1 * 2;
-                let point1: u32 = diff_point1 + block_start_point;
-                let point2: u32 = diff_point2 + block_start_point;
-
-                let output_point: u32 = k + block_start_point;
-
-                output_vec[output_point as usize] = middle_vec[point1 as usize].add(rotate_w_matrix[i as usize][output_point as usize].mul(middle_vec[point2 as usize]));
+            for k in 0..(block_size/2) {
+                let point1: u32 = block_start_point + k;
+                let point2: u32 = block_start_point + (k * 2);
+                output_vec[point1 as usize] = middle_vec[point1 as usize].add( rotate_w_matrix[i as usize][point1 as usize].mul(middle_vec[point2 as usize]) );
+            }
+            for k in 0..(block_size/2) {
+                let point1: u32 = block_start_point + k;
+                let point2: u32 = block_start_point + (k * 2);
+                output_vec[(point1 + (block_size/2)) as usize] = middle_vec[point1 as usize].add( rotate_w_matrix[i as usize][(point1 + (block_size/2)) as usize].mul(middle_vec[point2 as usize]) );
             }
         }
     }
@@ -156,7 +155,6 @@ fn main() {
     for i in 0..SAMPLE_SIZE {
         let x: f32 = PI_2_32 * (i as f32 / SAMPLE_SIZE as f32);
         sensor_val[i as usize] = ((ADC_BIT_MAX as f32 * 1.0/2.0) + ((ADC_BIT_MAX as f32 * x.sin()) * 1.0/2.0)) as u32;
-        //println!("{}", sensor_val[i as usize]);
     }
 
     //display
@@ -196,7 +194,7 @@ fn main() {
 
     let mut plot: [[bool; NY as usize]; NX as usize] =[[false; NY as usize]; NX as usize];
     for x in 0..SAMPLE_SIZE {
-        let y: f32 = NY as f32 - ((fft_result[x as usize] / (ADC_BIT_MAX * SAMPLE_SIZE) as f32) as f32).powf(2.0) - 1.0;
+        let y: f32 = NY as f32 - ((fft_result[x as usize] / (ADC_BIT_MAX * SAMPLE_SIZE) as f32) as f32) - 1.0;
         let y: usize = y as usize;
         plot[x as usize][y as usize] = true;
     }
