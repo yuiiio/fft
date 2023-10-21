@@ -95,9 +95,12 @@ fn fftfix(fr: &mut [i16; NUM_SAMPLES], fi: &mut [i16; NUM_SAMPLES], sinewave: &[
 
 fn main() {
     let mut sinewave: [i16; NUM_SAMPLES] = [0; NUM_SAMPLES];
-    for i in 0..NUM_SAMPLES {
-        sinewave[i] = ((6.283 * i as f32 / NUM_SAMPLES as f32).sin() * (2^15) as f32) as i16; // float2fix15
+    let mut ii: usize = 0;
+    while ii < NUM_SAMPLES {
+        sinewave[ii] = ((6.283 * ii as f32 / NUM_SAMPLES as f32).sin() * 32768.0 as f32) as i16; // float2fix15 //2^15
+        ii = ii + 2;
     }
+    println!("{:?}", sinewave);
 
     let mut fr: [i16; NUM_SAMPLES] = [0; NUM_SAMPLES];
     let mut fi: [i16; NUM_SAMPLES] = [0; NUM_SAMPLES];
@@ -137,7 +140,7 @@ fn main() {
 
     let mut plot: [[bool; NY as usize]; NX as usize] =[[false; NY as usize]; NX as usize];
     for x in 0..NUM_SAMPLES {
-        let y: usize = (fr[x] / (1024/64)) as usize; // need abs ?
+        let y: usize = (fr[x].abs() / (1024/64)) as usize; // need abs ?
         println!("{}", y);
         let y: usize = y as usize;
         plot[x][y] = true;
