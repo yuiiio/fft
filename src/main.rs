@@ -1,7 +1,3 @@
-use microfft;
-use std::convert::TryInto;
-use std::f32::consts::PI;
-
 const REF_DATA_VALUE_MAX: u32 = 64;// (1/64) is minimum value
 
 // reference from https://github.com/vha3/Hunter-Adams-RP2040-Demos/blob/master/Audio/g_Audio_FFT/fft.c
@@ -112,18 +108,6 @@ fn main() {
         fr[i] = BALL_PULSE[i] as i16 * (i16::MAX / 64);
     }
 
-    
-    // generate 64 samples of a sine wave at frequency 3
-    let sample_count = 64;
-    let signal_freq = 3.;
-    let sample_interval = 1. / sample_count as f32;
-    let samples: Vec<_> = (0..sample_count)
-        .map(|i| BALL_PULSE[i] as f32)
-        .collect();
-
-    // compute the RFFT of the samples
-    let mut samples: [_; 64] = samples.try_into().unwrap();
-    
 
     //display
     const NX: usize = NUM_SAMPLES + 1;
@@ -132,7 +116,7 @@ fn main() {
     let mut plot: [[bool; NY as usize]; NX as usize] =[[false; NY as usize]; NX as usize];
 
     for x in 0..NUM_SAMPLES {
-        let y: usize = samples[x] as usize;
+        let y: usize = (fr[x] / (i16::MAX / 64)) as usize;
         plot[x][y] = true;
     }
 
@@ -148,24 +132,18 @@ fn main() {
         println!("");
     }
 
-    let spectrum = microfft::real::rfft_64(&mut samples);
-    // since the real-valued coefficient at the Nyquist frequency is packed into the
-    // imaginary part of the DC bin, it must be cleared before computing the amplitudes
-    spectrum[0].im = 0.0;
-
-    let amplitudes: Vec<_> = spectrum.iter().map(|c| c.re.abs() as u32).collect();
-
-
+    //fr = sinewave;
     //try fft
     fftfix(&mut fr, &mut fi, &sinewave);
+    let fft_result = fr;
+    println!("{:?}", fft_result);
 
     //display
 
     let mut plot: [[bool; NY as usize]; NX as usize] =[[false; NY as usize]; NX as usize];
     let mut max: i16 = 0;
     let mut min: i16 = 0;
-    for x in 0..NUM_SAMPLES/2 {
-        fr[x] = amplitudes[x] as i16;
+    for x in 0..NUM_SAMPLES {
         if fr[x] > max { // need abs ?
             max = fr[x];
         }
@@ -175,7 +153,7 @@ fn main() {
     }
     let scale = max - min;
     println!("min: {}, max: {}, scale: {}", min, max, scale);
-    for x in 0..NUM_SAMPLES/2 {
+    for x in 0..NUM_SAMPLES {
         let y: usize = ((fr[x] - min) as f32 / scale as f32 * REF_DATA_VALUE_MAX as f32) as usize; // need abs ?
         //println!("{}", y);
         plot[x][y] = true;
@@ -184,7 +162,7 @@ fn main() {
     println!("FFT result");
 
     for y in 0..NY {
-        for x in 0..NX/2 {
+        for x in 0..NX {
             match plot[x as usize][y as usize] {
                 true => print!("*"),
                 false => print!(" "),
