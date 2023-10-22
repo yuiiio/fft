@@ -49,7 +49,7 @@ fn fftfix(fr: &mut [i16; NUM_SAMPLES], fi: &mut [i16; NUM_SAMPLES], sinewave: &[
         fi[m] = fi[mr] ;
         fi[mr] = ti ;
     }
-    //println!("{:?}", fr);
+    println!("{:?}", fr);
     // Adapted from code by:
     // Tom Roberts 11/8/89 and Malcolm Slaney 12/15/94 malcolm@interval.com
     // Length of the FFT's being combined (starts at 1)
@@ -108,6 +108,7 @@ fn main() {
         fr[i] = (BALL_PULSE[i] * (1024/64)) as i16;
     }
 
+
     //display
     const NX: usize = NUM_SAMPLES + 1;
     const NY: u32 = REF_DATA_VALUE_MAX + 1; //(TERMINAL $LINES)
@@ -131,6 +132,7 @@ fn main() {
         println!("");
     }
 
+    //fr = sinewave;
     //try fft
     fftfix(&mut fr, &mut fi, &sinewave);
     let fft_result = fr;
@@ -139,10 +141,21 @@ fn main() {
     //display
 
     let mut plot: [[bool; NY as usize]; NX as usize] =[[false; NY as usize]; NX as usize];
+    let mut max: i16 = 0;
+    let mut min: i16 = 0;
     for x in 0..NUM_SAMPLES {
-        let y: usize = (fr[x].abs() / (1024/64)) as usize; // need abs ?
-        println!("{}", y);
-        let y: usize = y as usize;
+        if fr[x] > max { // need abs ?
+            max = fr[x];
+        }
+        if fr[x] < min { // need abs ?
+            min = fr[x];
+        }
+    }
+    let scale = max - min;
+    println!("min: {}, max: {}, scale: {}", min, max, scale);
+    for x in 0..NUM_SAMPLES {
+        let y: usize = ((fr[x] - min) as f32 / scale as f32 * REF_DATA_VALUE_MAX as f32) as usize; // need abs ?
+        //println!("{}", y);
         plot[x][y] = true;
     }
 
