@@ -116,7 +116,19 @@ fn main() {
     let mut plot: [[bool; NY as usize]; NX as usize] =[[false; NY as usize]; NX as usize];
 
     for x in 0..NUM_SAMPLES {
+        /*
         let y: usize = (fr[x] / (i16::MAX / 64)) as usize;
+        plot[x][y] = true;
+        */
+    }
+
+    // test sine
+    let sample_interval = 1.0 / NUM_SAMPLES as f32;
+    for i in 0..NUM_SAMPLES {
+       fr[i] = ((2.0 * std::f32::consts::PI * 3.0 * sample_interval * i as f32).sin() * 64.0) as i16;
+    }
+    for x in 0..NUM_SAMPLES {
+        let y: usize = ((fr[x] + 64) / 2) as usize;
         plot[x][y] = true;
     }
 
@@ -132,7 +144,6 @@ fn main() {
         println!("");
     }
 
-    //fr = sinewave;
     //try fft
     fftfix(&mut fr, &mut fi, &sinewave);
     let fft_result = fr;
