@@ -142,19 +142,15 @@ fn main() {
 
     let mut plot: [[bool; NY as usize]; NX as usize] =[[false; NY as usize]; NX as usize];
     let mut max: i16 = 0;
-    let mut min: i16 = 0;
     for x in 0..NUM_SAMPLES {
-        if fr[x] > max { // need abs ?
+        fr[x] = fr[x].abs();
+        if fr[x] > max {
             max = fr[x];
         }
-        if fr[x] < min { // need abs ?
-            min = fr[x];
-        }
     }
-    let scale = max - min;
-    println!("min: {}, max: {}, scale: {}", min, max, scale);
+    println!("max: {}", max);
     for x in 0..NUM_SAMPLES {
-        let y: usize = ((fr[x] - min) as f32 / scale as f32 * REF_DATA_VALUE_MAX as f32) as usize; // need abs ?
+        let y: usize = (fr[x] as f32 / max as f32 * REF_DATA_VALUE_MAX as f32) as usize; // need abs ?
         //println!("{}", y);
         plot[x][y] = true;
     }
