@@ -1,25 +1,25 @@
 const REF_DATA_VALUE_MAX: u32 = 64;// (1/64) is minimum value
 
 // reference from https://github.com/vha3/Hunter-Adams-RP2040-Demos/blob/master/Audio/g_Audio_FFT/fft.c
-const NUM_SAMPLES: usize = 128;// (1/64) is minimum value
-const LOG2_NUM_SAMPLES: u16 = 7;// 64 = 2^6
+const NUM_SAMPLES: usize = 64;// (1/64) is minimum value
+const LOG2_NUM_SAMPLES: u16 = 6;// 64 = 2^6
 // Length of short (16 bits) minus log2 number of samples (6)
-const SHIFT_AMOUNT: u16 = 9;//
+const SHIFT_AMOUNT: u16 = 16 - LOG2_NUM_SAMPLES;
 
 const BALL_PULSE: [u16; NUM_SAMPLES] =
 [
-    0, 64, 0, 64, 0, 64, 0, 64, 0, 64, 0, 64, 0, 64, 0, 64, // first FULL: 8 pulse
-    0, 16, 0, 16, 0, 16, 0, 16, // second 1/4: 4 pulse
-    0, 4, 0, 4, 0, 4, 0, 4, // second 1/16: 4 pulse
-    0, 1, 0, 1, 0, 1, 0, 1, // second 1/64: 4 pulse
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 64 - ((8+4+4+4)*2) = 24
-    0, 64, 0, 64, 0, 64, 0, 64, 0, 64, 0, 64, 0, 64, 0, 64, // first FULL: 8 pulse
-    0, 16, 0, 16, 0, 16, 0, 16, // second 1/4: 4 pulse
-    0, 4, 0, 4, 0, 4, 0, 4, // second 1/16: 4 pulse
-    0, 1, 0, 1, 0, 1, 0, 1, // second 1/64: 4 pulse
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 64 - ((8+4+4+4)*2) = 24
+    64, 64, 64, 64, 64, 64, 64, 64, // first FULL: 8 pulse
+    16, 16, 16, 16, // second 1/4: 4 pulse
+    4, 4, 4, 4, // second 1/16: 4 pulse
+    1, 1, 1, 1, // second 1/64: 4 pulse
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 833/25 = 33.32, 33 - 8 - 4 - 4 - 4 = 13. 33 * 2 = 66, =>
+                                        // shrink 64, 32 - 8 - 4 - 4 - 4 = 12, 
+    64, 64, 64, 64, 64, 64, 64, 64, // first FULL: 8 pulse
+    16, 16, 16, 16, // second 1/4: 4 pulse
+    4, 4, 4, 4, // second 1/16: 4 pulse
+    1, 1, 1, 1, // second 1/64: 4 pulse
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 833/25 = 33.32, 33 - 8 - 4 - 4 - 4 = 13. 33 * 2 = 66, =>
+                                        // shrink 64, 32 - 8 - 4 - 4 - 4 = 12, 
 ];
 
 fn multfix15(a: i16, b: i16) -> i16 {
@@ -105,7 +105,7 @@ fn main() {
     let mut fr: [i16; NUM_SAMPLES] = [0; NUM_SAMPLES];
     let mut fi: [i16; NUM_SAMPLES] = [0; NUM_SAMPLES];
     for i in 0..NUM_SAMPLES {
-        fr[i] = (BALL_PULSE[i] * (1024/64)) as i16;
+        fr[i] = BALL_PULSE[i] as i16 * (i16::MAX / 64);
     }
 
 
@@ -116,7 +116,7 @@ fn main() {
     let mut plot: [[bool; NY as usize]; NX as usize] =[[false; NY as usize]; NX as usize];
 
     for x in 0..NUM_SAMPLES {
-        let y: usize = (fr[x] / (1024/64)) as usize;
+        let y: usize = (fr[x] / (i16::MAX / 64)) as usize;
         plot[x][y] = true;
     }
 
