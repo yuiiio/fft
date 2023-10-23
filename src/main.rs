@@ -64,8 +64,8 @@ fn fftfix(fr: &mut [i16; NUM_SAMPLES], fi: &mut [i16; NUM_SAMPLES], sinewave: &[
         // For each element in the FFT's that are being combined . . .
         for m in 0..l {
             let j = m << k;
-            let mut wr =  sinewave[j + NUM_SAMPLES / 4] ; // cos(2pi m/N)
-            let mut wi = -sinewave[j] ;                 // sin(2pi m/N)
+            let mut wr: i16 =  sinewave[j + (NUM_SAMPLES / 4)] ; // cos(2pi m/N)
+            let mut wi: i16 = -sinewave[j] ;                 // sin(2pi m/N)
             wr >>= 1 ;                          // divide by two
             wi >>= 1 ;                          // divide by two
             // i gets the index of one of the FFT elements being combined
@@ -77,8 +77,8 @@ fn fftfix(fr: &mut [i16; NUM_SAMPLES], fi: &mut [i16; NUM_SAMPLES], sinewave: &[
                 let tr = multfix15(wr, fr[j]) - multfix15(wi, fi[j]) ;
                 let ti = multfix15(wr, fi[j]) + multfix15(wi, fr[j]) ;
                 // divide ith index elements by two (top half of above matrix)
-                let qr = fr[i]>>1 ;
-                let qi = fi[i]>>1 ;
+                let qr = fr[i] >> 1 ;
+                let qi = fi[i] >> 1 ;
                 // compute the new values at each index
                 fr[j] = qr - tr ;
                 fi[j] = qi - ti ;
@@ -94,11 +94,10 @@ fn fftfix(fr: &mut [i16; NUM_SAMPLES], fi: &mut [i16; NUM_SAMPLES], sinewave: &[
 }
 
 fn main() {
+    // should calc once
     let mut sinewave: [i16; NUM_SAMPLES] = [0; NUM_SAMPLES];
-    let mut ii: usize = 0;
-    while ii < NUM_SAMPLES {
-        sinewave[ii] = ((6.283 * ii as f32 / NUM_SAMPLES as f32).sin() * 32768.0 as f32) as i16; // float2fix15 //2^15
-        ii = ii + 2;
+    for i in 0..NUM_SAMPLES {
+        sinewave[i] = ((6.283 * (i as f32 / NUM_SAMPLES as f32)).sin() as f32 * 32768.0 as f32) as i16; // float2fix15 //2^15
     }
     println!("{:?}", sinewave);
 
@@ -115,12 +114,12 @@ fn main() {
 
     let mut plot: [[bool; NY as usize]; NX as usize] =[[false; NY as usize]; NX as usize];
 
-    for x in 0..NUM_SAMPLES {
         /*
+    for x in 0..NUM_SAMPLES {
         let y: usize = (fr[x] / (i16::MAX / 64)) as usize;
         plot[x][y] = true;
-        */
     }
+        */
 
     // test sine
     let sample_interval = 1.0 / NUM_SAMPLES as f32;
@@ -128,6 +127,7 @@ fn main() {
        fr[i] = ((2.0 * std::f32::consts::PI * 3.0 * sample_interval * i as f32).sin() * 64.0) as i16;
     }
     for x in 0..NUM_SAMPLES {
+        println!("{}", fr[x]);
         let y: usize = ((fr[x] + 64) / 2) as usize;
         plot[x][y] = true;
     }
@@ -146,8 +146,8 @@ fn main() {
 
     //try fft
     fftfix(&mut fr, &mut fi, &sinewave);
-    let fft_result = fr;
-    println!("{:?}", fft_result);
+    println!("{:?}", fr);
+    println!("{:?}", fi);
 
     //display
 
@@ -161,7 +161,8 @@ fn main() {
     }
     println!("max: {}", max);
     for x in 0..NUM_SAMPLES {
-        let y: usize = (fr[x] as f32 / max as f32 * REF_DATA_VALUE_MAX as f32) as usize; // need abs ?
+        //let y: usize = (fr[x] as f32 / max as f32 * REF_DATA_VALUE_MAX as f32) as usize; // need abs ?
+        let y: usize = fr[x] as usize;
         //println!("{}", y);
         plot[x][y] = true;
     }
