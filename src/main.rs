@@ -124,7 +124,7 @@ fn main() {
     // test sine
     let sample_interval = 1.0 / NUM_SAMPLES as f32;
     for i in 0..NUM_SAMPLES {
-       fr[i] = ((2.0 * std::f32::consts::PI * 3.0 * sample_interval * i as f32).sin() * 64.0) as i16;
+       fr[i] = ((2.0 * std::f32::consts::PI * 3.0 * sample_interval * i as f32 + 1.0).sin() * 64.0) as i16;
     }
     for x in 0..NUM_SAMPLES {
         println!("{}", fr[x]);
