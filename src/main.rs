@@ -1,7 +1,3 @@
-use microfft;
-use std::convert::TryInto;
-use std::f32::consts::PI;
-
 const REF_DATA_VALUE_MAX: u32 = 64;// (1/64) is minimum value
 
 // reference from https://github.com/vha3/Hunter-Adams-RP2040-Demos/blob/master/Audio/g_Audio_FFT/fft.c
@@ -121,8 +117,7 @@ fn main() {
 
     for x in 0..NUM_SAMPLES {
         /*
-        // let y: usize = (fr[x] / (i16::MAX / 64)) as usize;
-        let y: usize = samples[x] as usize;
+        let y: usize = (fr[x] / (i16::MAX / 64)) as usize;
         plot[x][y] = true;
         */
     }
@@ -149,35 +144,23 @@ fn main() {
         println!("");
     }
 
-    let mut samples: [f32; NUM_SAMPLES] = [0.0; NUM_SAMPLES];
-    for i in 0..NUM_SAMPLES {
-        samples[i] = fr[i] as f32;
-    }
-
-    let spectrum = microfft::real::rfft_64(&mut samples);
-    // since the real-valued coefficient at the Nyquist frequency is packed into the
-    // imaginary part of the DC bin, it must be cleared before computing the amplitudes
-    spectrum[0].im = 0.0;
-
-    let amplitudes: Vec<_> = spectrum.iter().map(|c| c.re.abs() as u32).collect();
-
-
     //try fft
     fftfix(&mut fr, &mut fi, &sinewave);
+    let fft_result = fr;
+    println!("{:?}", fft_result);
 
     //display
 
     let mut plot: [[bool; NY as usize]; NX as usize] =[[false; NY as usize]; NX as usize];
     let mut max: i16 = 0;
-    for x in 0..NUM_SAMPLES / 2 {
-        //fr[x] = fr[x].abs();
-        fr[x] = amplitudes[x] as i16;
+    for x in 0..NUM_SAMPLES {
+        fr[x] = fr[x].abs();
         if fr[x] > max {
             max = fr[x];
         }
     }
     println!("max: {}", max);
-    for x in 0..NUM_SAMPLES / 2 {
+    for x in 0..NUM_SAMPLES {
         let y: usize = (fr[x] as f32 / max as f32 * REF_DATA_VALUE_MAX as f32) as usize; // need abs ?
         //println!("{}", y);
         plot[x][y] = true;
@@ -186,7 +169,7 @@ fn main() {
     println!("FFT result");
 
     for y in 0..NY {
-        for x in 0..NX/2 {
+        for x in 0..NX {
             match plot[x as usize][y as usize] {
                 true => print!("*"),
                 false => print!(" "),
