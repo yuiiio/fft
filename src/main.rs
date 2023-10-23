@@ -104,7 +104,7 @@ fn main() {
     let mut fr: [i16; NUM_SAMPLES] = [0; NUM_SAMPLES];
     let mut fi: [i16; NUM_SAMPLES] = [0; NUM_SAMPLES];
     for i in 0..NUM_SAMPLES {
-        fr[i] = BALL_PULSE[i] as i16 * (i16::MAX / 64);
+        fr[i] = BALL_PULSE[i] as i16;
     }
 
 
@@ -114,13 +114,12 @@ fn main() {
 
     let mut plot: [[bool; NY as usize]; NX as usize] =[[false; NY as usize]; NX as usize];
 
-        /*
     for x in 0..NUM_SAMPLES {
-        let y: usize = (fr[x] / (i16::MAX / 64)) as usize;
+        let y: usize = fr[x] as usize;
         plot[x][y] = true;
     }
-        */
 
+        /*
     // test sine
     let sample_interval = 1.0 / NUM_SAMPLES as f32;
     for i in 0..NUM_SAMPLES {
@@ -131,6 +130,7 @@ fn main() {
         let y: usize = ((fr[x] + 64) / 2) as usize;
         plot[x][y] = true;
     }
+        */
 
     println!("BALL_PULSE");
 
@@ -161,7 +161,6 @@ fn main() {
     }
     println!("max: {}", max);
     for x in 0..NUM_SAMPLES {
-        //let y: usize = (fr[x] as f32 / max as f32 * REF_DATA_VALUE_MAX as f32) as usize; // need abs ?
         let y: usize = fr[x] as usize;
         //println!("{}", y);
         plot[x][y] = true;
